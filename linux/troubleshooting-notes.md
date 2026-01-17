@@ -1,0 +1,2 @@
+# Linux troubleshooting notes
+
