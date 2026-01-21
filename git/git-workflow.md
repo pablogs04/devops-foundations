@@ -18,3 +18,7 @@
 ## Conflicts
 - detect
 - resolve
+## Staging area (index)
+- Working directory: tus cambios locales
+- Staging area: lo que va al próximo commit
+- Commit: snapshot en el historial
