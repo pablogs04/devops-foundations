@@ -29,3 +29,16 @@
   - Find commit: `git log --oneline -n 5`
   - Revert it: `git revert <commit_sha>`
   - Push: `git push`
+
+## Conflicts (basic)
+- A conflict happens when Git cannot auto-merge changes (often same lines).
+- Typical flow:
+  - Merge: `git merge <branch>`
+  - See conflicted files: `git status`
+  - Open file and resolve markers:
+    - `<<<<<<< HEAD` (current branch)
+    - `=======`
+    - `>>>>>>> <branch>` (incoming branch)
+  - Mark resolved: `git add <file>`
+  - Finish merge: `git commit` (merge commit)
+- Abort merge (if needed): `git merge --abort`
