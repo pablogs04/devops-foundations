@@ -1,4 +1,4 @@
-# Git workflow (Sprint 1) - VERSION B
+# Git workflow (Sprint 1)
 
 ## Setup
 - git config (name/email)
