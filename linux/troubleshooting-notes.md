@@ -31,3 +31,36 @@
 - Ante `203/EXEC`, comprobar `ExecStart` y validar rutas con `command -v` o `ls -la`.
 - Tras cambios en unidades: `daemon-reload` + `restart` + `status`.
 
+## Incidente 2 — Puerto ocupado: OSError [Errno 98] Address already in use
+
+**Síntoma:**
+- Al ejecutar `python3 -m http.server 8080` falla con:
+  - `OSError: [Errno 98] Address already in use`
+
+**Detección (comandos):**
+- Confirmar que hay un listener en 8080:
+  - `ss -ltn | grep ':8080'`
+- Identificar proceso (PID/programa):
+  - `ss -ltnp | grep ':8080'`
+- Verificar qué ejecuta el PID:
+  - `ps -fp <PID>`
+  - `tr '\0' ' ' < /proc/<PID>/cmdline; echo`
+
+**Causa raíz:**
+- Ya existía un proceso escuchando en `0.0.0.0:8080`, por lo que el nuevo servidor no pudo hacer `bind()` al puerto.
+
+**Solución (comandos):**
+- Parar el proceso que ocupaba el puerto:
+  - `kill <PID>`
+- Verificar que el puerto queda libre:
+  - `ss -ltnp | grep ':8080' || echo "8080 libre"`
+- Reintentar el arranque:
+  - `python3 -m http.server 8080`
+- Parar el servidor (cuando termine la prueba):
+  - `Ctrl+C`
+
+**Prevención / qué aprendí:**
+- Ante “Address already in use”, primero identificar el proceso dueño del puerto antes de matar nada.
+- `ss -ltnp` da PID y programa; `ps -fp` confirma qué es.
+- Si es producción y no puedes matar el proceso, alternativa: cambiar el puerto o reconfigurar el servicio.
+
