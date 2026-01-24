@@ -64,3 +64,31 @@
 - `ss -ltnp` da PID y programa; `ps -fp` confirma qué es.
 - Si es producción y no puedes matar el proceso, alternativa: cambiar el puerto o reconfigurar el servicio.
 
+## Incidente 3 — Docker: permission denied en /var/run/docker.sock
+
+**Síntoma:**
+- `docker ps` falla con:
+  - `permission denied while trying to connect to the docker API at unix:///var/run/docker.sock`
+
+**Detección (comandos):**
+- Ver permisos del socket:
+  - `ls -la /var/run/docker.sock`
+  - Ejemplo esperado: `root docker` y permisos `srw-rw----`
+- Confirmar que con sudo funciona:
+  - `sudo docker ps`
+
+**Causa raíz:**
+- El socket Docker pertenece a `root:docker` y el usuario no estaba en el grupo `docker`, así que no tenía permisos de lectura/escritura sobre el socket.
+
+**Solución (comandos):**
+- Añadir usuario al grupo docker:
+  - `sudo usermod -aG docker <user>`
+- Aplicar cambios (re-login o sesión nueva):
+  - `newgrp docker` (para aplicar en la sesión actual) o cerrar y abrir sesión
+- Validar:
+  - `docker ps` (sin sudo)
+
+**Prevención / qué aprendí:**
+- Docker se controla vía `docker.sock`; los permisos del socket mandan.
+- En servidores, usar grupo `docker` evita depender de sudo (pero es un permiso potente).
+
