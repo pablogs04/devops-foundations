@@ -7,6 +7,7 @@ Serve a local `index.html` with Nginx using a read-only bind mount.
 
 ### Run (from repo root)
 ```bash
+volume path wrong if you run from ~
 docker run -d --name web -p 8082:80 \
   -v "$(pwd)/docker/nginx-static:/usr/share/nginx/html:ro" \
   nginx:alpine
