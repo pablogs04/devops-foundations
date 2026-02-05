@@ -41,4 +41,14 @@
     - `>>>>>>> <branch>` (incoming branch)
   - Mark resolved: `git add <file>`
   - Finish merge: `git commit` (merge commit)
-- Abort merge (if needed): `git merge --abort`
+- Abort merge (if needed): `git merge --abort
+
+## Good commit messages
+¿Por qué ejecutamos docker compose up -d desde docker/ y no desde el root?
+“Porque el compose file y los paths relativos (./nginx-static) dependen del directorio; desde docker/ lo resuelve bien.
+
+¿Qué diferencia práctica hay entre docker compose down y docker rm web?
+down baja el stack y limpia la red del proyecto; rm borra solo el contenedor.
+
+¿Qué te demuestra el error “Read-only file system” en este lab?
+prueba que el volumen está montado en solo lectura; el contenedor no puede modificar el host.
