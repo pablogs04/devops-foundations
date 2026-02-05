@@ -43,12 +43,17 @@
   - Finish merge: `git commit` (merge commit)
 - Abort merge (if needed): `git merge --abort
 
-## Good commit messages
-¿Por qué ejecutamos docker compose up -d desde docker/ y no desde el root?
-“Porque el compose file y los paths relativos (./nginx-static) dependen del directorio; desde docker/ lo resuelve bien.
+## Good commit messages (baseline)
 
-¿Qué diferencia práctica hay entre docker compose down y docker rm web?
-down baja el stack y limpia la red del proyecto; rm borra solo el contenedor.
+Format: `type(scope): summary`
 
-¿Qué te demuestra el error “Read-only file system” en este lab?
-prueba que el volumen está montado en solo lectura; el contenedor no puede modificar el host.
+Rules:
+- Use present tense and be specific (what + where).
+- Keep it short (ideally < 70 chars).
+- One logical change per commit.
+
+Examples:
+- `docs(docker): add docker compose lab`
+- `docs(git): clarify staging vs working tree`
+- `chore(security): harden gitignore and add SECURITY policy`
+
