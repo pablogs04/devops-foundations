@@ -92,3 +92,45 @@
 - Docker se controla vía `docker.sock`; los permisos del socket mandan.
 - En servidores, usar grupo `docker` evita depender de sudo (pero es un permiso potente).
 
+## Incidente 4 — Archivos del repo con owner root (por usar sudo) → no puedo editarlos sin sudo
+
+**Síntoma:**
+- <<<Describe el síntoma exacto>>>  
+  Ejemplos típicos:
+  - No puedo guardar/editar `docker/README.md` sin sudo.
+  - VS Code/terminal me da “Permission denied” al editar.
+  - `ls -la` muestra archivos con `root root`.
+
+**Detección (comandos):**
+- Ver en qué carpeta estoy:
+  - `pwd`
+- Ver propietario/permisos de los archivos afectados:
+  - `ls -la docker`
+  - (si aplica) `ls -la docker/<archivo>`
+- Confirmar usuario actual:
+  - `whoami`
+- (Opcional) Ver grupos del usuario:
+  - `id`
+
+**Evidencia (salida relevante):**
+- <<<Pega 2–4 líneas clave>>>  
+  Ejemplo:
+  - `-rw-r--r--. 1 root root 155 ... docker-compose.yml`
+  - `-rw-r--r--. 1 root root 734 ... README.md`
+
+**Causa raíz:**
+- Se ejecutaron comandos con `sudo` creando/modificando archivos dentro del repositorio.
+- `sudo` escribe como `root`, por eso el owner quedó `root:root` y luego el usuario normal no puede editar cómodamente.
+
+**Solución (comandos):**
+- Cambiar owner del árbol afectado al usuario normal:
+  - `sudo chown -R <tu_usuario>:<tu_usuario> docker`
+- Verificar:
+  - `ls -la docker`
+  - Confirmar que ya no aparece `root root` en esos ficheros.
+
+**Prevención / qué aprendí:**
+- Evitar `sudo` dentro del repositorio salvo necesidad real.
+- Si necesito `sudo` para Docker, mejor arreglar permisos/grupo (`docker`) que andar usando sudo siempre.
+- Si me vuelve a pasar: `ls -la` para detectar owner + `chown -R` para corregir.
+
