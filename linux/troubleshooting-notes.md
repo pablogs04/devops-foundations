@@ -171,3 +171,40 @@
 - `kill` (SIGTERM) es el primer intento; si no muere, entonces evaluar escalado (`kill -9`) *solo después* de confirmar que es el proceso correcto.
 - En producción: si pasa a menudo, plantear límites/contención (systemd limits, cgroups) y monitorización/alertas.
 
+## Incidente 6 — Nginx: access.log no aparece en el host (access.log -> /dev/stdout)
+
+**Síntoma:**
+- `tail docker/nginx-logs/access.log` falla con “No existe el fichero”.
+- Pero `docker compose logs web` sí muestra las requests.
+
+**Detección (comandos):**
+- Ver logs por stdout:
+  - `docker compose -f docker/docker-compose.yml logs --tail 20 web`
+- Comprobar dónde apunta access.log dentro del contenedor:
+  - `docker compose -f docker/docker-compose.yml exec web sh -c 'ls -la /var/log/nginx; readlink -f /var/log/nginx/access.log || true'`
+
+**Evidencia (logs/salida):**
+- `/var/log/nginx/access.log -> /dev/stdout`
+- `readlink -f ...` resolvía a un descriptor tipo `/dev/pts/*` (stdout de la sesión)
+
+**Causa raíz:**
+- La imagen de nginx redirige access/error logs a stdout/stderr (symlinks a /dev/stdout y /dev/stderr),
+  así que no se crea un archivo real en el filesystem del host.
+
+**Solución (comandos):**
+- Crear directorio de logs en el host:
+  - `mkdir -p docker/nginx-logs`
+- Montar el volumen de logs en compose:
+  - `./nginx-logs:/var/log/nginx`
+- Recrear el stack:
+  - `docker compose -f docker/docker-compose.yml down`
+  - `docker compose -f docker/docker-compose.yml up -d`
+- Generar tráfico y validar:
+  - `curl -s http://localhost:8082 >/dev/null`
+  - `tail -n 5 docker/nginx-logs/access.log`
+
+**Prevención / qué aprendí:**
+- Si un log apunta a `/dev/stdout`, lo verás con `docker logs`, pero no como archivo.
+- Para tener “logs como ficheros” necesitas volumen + path real (no symlink).
+- Los cambios de volumes requieren recrear contenedores (down/up).
+
