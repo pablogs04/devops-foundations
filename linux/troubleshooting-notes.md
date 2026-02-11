@@ -134,3 +134,40 @@
 - Si necesito `sudo` para Docker, mejor arreglar permisos/grupo (`docker`) que andar usando sudo siempre.
 - Si me vuelve a pasar: `ls -la` para detectar owner + `chown -R` para corregir.
 
+## Incidente 5 — Proceso al 100% CPU (runaway process)
+
+**Síntoma:**
+- El servidor se nota “pesado” / CPU alta.
+- En este lab, se observó un proceso consumiendo ~100% CPU.
+
+**Detección (comandos):**
+- Crear el problema (controlado) y obtener PID:
+  - `yes > /dev/null & echo $!`
+- Ver consumo del proceso:
+  - `ps -p <PID> -o pid,pcpu,pmem,cmd`
+- Ver en tiempo real:
+  - `top -p <PID>`
+- Alternativa rápida para encontrar “top CPU” sin saber PID:
+  - `ps aux --sort=-%cpu | head`
+
+**Evidencia (salida observada):**
+- `ps` mostró algo similar a:
+  - `PID <PID>  %CPU ~100  CMD yes`
+- `top` confirmó el proceso `yes` con ~99–100% CPU.
+
+**Causa raíz:**
+- Un proceso en bucle (`yes`) estaba ejecutándose sin parar.
+- Aunque se redirigió a `/dev/null` (no genera carga de disco), sigue consumiendo CPU porque calcula/escribe continuamente.
+
+**Solución (comandos):**
+- Parar el proceso de forma “normal” (SIGTERM por defecto):
+  - `kill <PID>`
+- Verificar que ya no existe:
+  - `ps -p <PID> || echo "muerto"`
+
+**Prevención / qué aprendí:**
+- Ante CPU alta: primero **identificar** el proceso (no matar “a ciegas”).
+- `ps/top` te da evidencia clara (PID + %CPU + comando).
+- `kill` (SIGTERM) es el primer intento; si no muere, entonces evaluar escalado (`kill -9`) *solo después* de confirmar que es el proceso correcto.
+- En producción: si pasa a menudo, plantear límites/contención (systemd limits, cgroups) y monitorización/alertas.
+
