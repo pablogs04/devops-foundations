@@ -6,5 +6,5 @@ services:
       - "8082:80"
     volumes:
       - ./nginx-static:/usr/share/nginx/html:ro
-      - ./nginx-logs:/var/log/ngi
-        ¿docker ps te f- ./nginx-logs:/var/log/nginx
+      - ./nginx-static:/usr/share/nginx/html:ro
+
