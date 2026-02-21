@@ -1,0 +1,30 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: la-nginx
+    ports:
+      - "8085:80"
+    volumes:
+      - ./public:/usr/share/nginx/html:ro
+      - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs:/var/log/nginx
+    restart: unless-stopped
+
+  goaccess:
+    image: allinurl/goaccess:latest
+    container_name: la-goaccess
+    depends_on:
+      - nginx
+    ports:
+      - "7890:7890"
+    volumes:
+      - ./logs:/logs:ro
+      - ./reports:/reports
+    command: >
+      /logs/access.log
+      -o /reports/report.html
+      --log-format=COMBINED
+      --real-time-html
+      --ws-url=ws://localhost:7890
+      --port=7890
+    restart: unless-stopped

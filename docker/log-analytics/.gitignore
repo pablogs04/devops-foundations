@@ -1,0 +1,7 @@
+# runtime artifacts (do not commit)
+logs/
+reports/
+
+# keep directories in git
+!logs/.gitkeep
+!reports/.gitkeep
