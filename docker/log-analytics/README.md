@@ -1,42 +1,29 @@
+
 # Nginx Log Analytics Stack (Sprint 1)
 
-Mini-stack DevOps reproducible para **generar, persistir y analizar access logs**:
-- **Nginx** sirve contenido estático y escribe logs a fichero.
-- **GoAccess** genera un dashboard HTML en tiempo real a partir del access log.
-- (Sprint 1) Este stack se conecta con un **CLI Python** (repo `python-devops-basics`) para sacar métricas JSON.
+Mini-stack DevOps reproducible para **generar, persistir y analizar access logs**.
+
+## What you get
+- **Nginx** serves a static site and writes access/error logs to files.
+- **GoAccess** reads the access log and generates a dashboard (`report.html`).
+- The output can be consumed by a **Python CLI** (repo `python-devops-basics`) to produce JSON metrics.
 
 ## Architecture
-Host ports:
-- Nginx: http://localhost:8085
-- GoAccess dashboard: http://localhost:7890/report.html
+Ports:
+- Nginx: `http://localhost:8085`
+- Report served by Nginx: `http://localhost:8085/reports/report.html`
+- GoAccess realtime websocket server: `ws://localhost:7890`
 
-Volumes:
-- `./public` -> site content (read-only)
-- `./logs` -> persistent nginx logs (host filesystem)
-- `./reports` -> generated GoAccess report (host filesystem)
+Volumes (host -> container):
+- `./public` -> `/usr/share/nginx/html` (read-only)
+- `./configs/nginx.conf` -> `/etc/nginx/nginx.conf` (read-only)
+- `./logs` -> `/var/log/nginx` (Nginx writes `access.log` and `error.log`)
+- `./reports` -> `/reports` (GoAccess writes `report.html`)
 
 ## Quickstart
 From `devops-foundations/docker/log-analytics`:
-1) `docker compose up -d`
-2) Generate traffic:
-   - `curl -s http://localhost:8085 >/dev/null`
-   - `curl -s http://localhost:8085/NOEXISTE >/dev/null`
-3) Verify logs:
-   - `tail -n 5 logs/access.log`
-4) Open dashboard:
-   - http://localhost:7890/report.html
 
-## Debugging
-- Container status: `docker compose ps`
-- Nginx logs (stdout/stderr): `docker compose logs --tail 50 nginx`
-- GoAccess logs: `docker compose logs --tail 50 goaccess`
-- Exec into nginx: `docker compose exec nginx sh`
-  - Check config: `nginx -T | head`
-  - Check logs dir: `ls -la /var/log/nginx`
-
-## Notes
-- In many Docker images, Nginx logs are redirected to stdout/stderr. Here we override it to write to real files using `configs/nginx.conf`.
-- Access logs can be created by root inside the container; reading them from the host is enough for analytics.
-
-## Stop & clean
-- `docker compose down`
+1) Start the stack
+```bash
+docker compose up -d
+docker compose ps

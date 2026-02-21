@@ -8,6 +8,7 @@ services:
       - ./public:/usr/share/nginx/html:ro
       - ./configs/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./logs:/var/log/nginx
+      - ./reports:/reports:ro
     restart: unless-stopped
 
   goaccess:
