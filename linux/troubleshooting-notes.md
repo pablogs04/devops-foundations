@@ -208,3 +208,70 @@
 - Para tener “logs como ficheros” necesitas volumen + path real (no symlink).
 - Los cambios de volumes requieren recrear contenedores (down/up).
 
+## Incidente 7 — Consumo de disco / localizar “qué ocupa” (df + du)
+
+**Síntoma:**
+- El disco podría llenarse y causar errores del tipo “No space left on device”.
+- En este lab simulé consumo de espacio para practicar detección y localización.
+
+**Detección (comandos):**
+- Ver espacio disponible en `/`:
+  - `df -h /`
+- Simular un archivo grande (controlado):
+  - `mkdir -p ~/tmp-labs && cd ~/tmp-labs`
+  - `fallocate -l 512M bigfile.big`
+- Ver tamaño del archivo:
+  - `ls -lh bigfile.big`
+- Encontrar “qué ocupa” en HOME:
+  - `du -sh ~/* 2>/dev/null | sort -h | tail -n 10`
+
+**Evidencia (salida observada):**
+- `df -h /` mostró aprox `70G` total, `~7.3G` usado, `~63G` disponible.
+- `ls -lh bigfile.big` confirmó `512M`.
+- `du ...` mostró `~/tmp-labs` ocupando `512M`.
+
+**Causa raíz:**
+- El consumo de disco viene normalmente de ficheros grandes (logs, dumps, caches) o crecimiento continuo sin rotación.
+
+**Solución (comandos):**
+- Borrar el archivo grande (o limpiar el directorio culpable):
+  - `rm -f ~/tmp-labs/bigfile.big`
+- Verificar espacio tras limpiar:
+  - `df -h /`
+
+**Prevención / qué aprendí:**
+- `df -h` responde “¿cuánto espacio queda?”.
+- `du -sh` + `sort` te dice “¿qué directorios están ocupando?”.
+- En producción, revisar rotación de logs, límites de retención y alertas de disco.
+
+## Incidente 8 — DNS: resolución de nombres (getent + resolv.conf + dig)
+
+**Síntoma:**
+- Fallos al acceder a servicios por nombre (ej. `github.com`) cuando DNS no resuelve.
+
+**Detección (comandos):**
+- Resolver con la librería del sistema (lo que usan muchas apps):
+  - `getent hosts github.com`
+- Ver resolvers configurados:
+  - `cat /etc/resolv.conf`
+- Resolver con herramienta DNS (si está disponible):
+  - `dig +short github.com` (o `nslookup github.com`)
+
+**Evidencia (salida observada):**
+- `getent hosts github.com` devolvió una IP (`140.82.121.4`).
+- `/etc/resolv.conf` tenía `nameserver 1.1.1.1` y `nameserver 8.8.8.8`.
+- `dig +short github.com` devolvió IP (puede variar, CDNs/anycast).
+
+**Causa raíz (si falla en producción):**
+- Resolver incorrecto/inaccesible, firewall bloqueando 53/udp, VPN/DNS corporativo, o configuración rota en `resolv.conf`/NetworkManager.
+
+**Solución (pasos típicos):**
+- Verificar conectividad al resolver (si procede) y revisar `resolv.conf`.
+- Probar resolvers alternativos temporalmente (según políticas).
+- Reiniciar servicio de red/DNS local si aplica.
+
+**Prevención / qué aprendí:**
+- `getent` es la prueba “real” desde el punto de vista de las aplicaciones.
+- `dig/nslookup` ayudan a aislar si el problema es DNS o la app.
+- Las IPs pueden cambiar; lo importante es que haya resolución y conectividad.
+
